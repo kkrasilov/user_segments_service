@@ -32,7 +32,7 @@
 ### 1. Клонирование репозитория
 
 ```bash
-git clone <repository-url>
+git clone git@github.com:kkrasilov/user_segments_service.git
 cd user_segments_service
 ```
 
@@ -385,11 +385,3 @@ http POST :9292/api/segments slug=TEST_SEGMENT name="Test" auto_assign_percent:=
 # Получение сегментов пользователя
 http :9292/api/users/1/segments
 ```
-
-## Лицензия
-
-MIT
-
-## Контакты
-
-Для вопросов и предложений создавайте Issues в репозитории.
