@@ -1,0 +1,24 @@
+[Unit]
+Description=User Segments Service (Roda/Puma)
+After=network.target
+
+[Service]
+Type=simple
+User=deploy
+WorkingDirectory=/var/www/user_segments_service/current
+Environment=RACK_ENV=production
+Environment=RAILS_ENV=production
+
+# Load RVM
+ExecStart=/bin/bash -lc 'source /home/deploy/.rvm/scripts/rvm && rvm use ruby-3.2.2@default && bundle exec puma -C config/puma.rb'
+
+# Restart policy
+Restart=always
+RestartSec=10
+
+# Logging
+StandardOutput=append:/var/www/user_segments_service/shared/log/puma.stdout.log
+StandardError=append:/var/www/user_segments_service/shared/log/puma.stderr.log
+
+[Install]
+WantedBy=multi-user.target
