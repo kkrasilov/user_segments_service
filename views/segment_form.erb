@@ -1,0 +1,79 @@
+<div class="px-4 py-6 sm:px-0">
+  <div class="md:grid md:grid-cols-3 md:gap-6">
+    <div class="md:col-span-1">
+      <div class="px-4 sm:px-0">
+        <h3 class="text-lg font-medium leading-6 text-gray-900">Создание сегмента</h3>
+        <p class="mt-1 text-sm text-gray-600">
+          Укажите параметры нового сегмента. Можно настроить автоматическое распределение на процент пользователей.
+        </p>
+      </div>
+    </div>
+    <div class="mt-5 md:mt-0 md:col-span-2">
+      <div class="shadow sm:rounded-md sm:overflow-hidden">
+        <div class="px-4 py-5 bg-white space-y-6 sm:p-6">
+          <div>
+            <label for="slug" class="block text-sm font-medium text-gray-700">Slug</label>
+            <input type="text" name="slug" id="slug" placeholder="MAIL_GPT" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md px-3 py-2 border">
+            <p class="mt-2 text-sm text-gray-500">Уникальный идентификатор (заглавные буквы, цифры и подчеркивания)</p>
+          </div>
+
+          <div>
+            <label for="name" class="block text-sm font-medium text-gray-700">Название</label>
+            <input type="text" name="name" id="name" placeholder="GPT в письмах" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md px-3 py-2 border">
+          </div>
+
+          <div>
+            <label for="description" class="block text-sm font-medium text-gray-700">Описание</label>
+            <textarea id="description" name="description" rows="3" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 mt-1 block w-full sm:text-sm border border-gray-300 rounded-md px-3 py-2" placeholder="Эксперимент с использованием GPT"></textarea>
+          </div>
+
+          <div>
+            <label for="auto_assign_percent" class="block text-sm font-medium text-gray-700">Автоназначение (%)</label>
+            <input type="number" name="auto_assign_percent" id="auto_assign_percent" min="0" max="100" placeholder="30" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md px-3 py-2 border">
+            <p class="mt-2 text-sm text-gray-500">Процент пользователей для автоматического назначения (0-100)</p>
+          </div>
+        </div>
+        <div class="px-4 py-3 bg-gray-50 text-right sm:px-6">
+          <button type="button" onclick="createSegment()" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            Создать сегмент
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  async function createSegment() {
+    const slug = document.getElementById('slug').value;
+    const name = document.getElementById('name').value;
+    const description = document.getElementById('description').value;
+    const auto_assign_percent = document.getElementById('auto_assign_percent').value;
+
+    try {
+      const response = await fetch('/api/segments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          slug,
+          name,
+          description,
+          auto_assign_percent: auto_assign_percent ? parseInt(auto_assign_percent) : null
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert('Сегмент успешно создан!');
+        window.location.href = '/segments';
+      } else {
+        alert('Ошибка: ' + (data.error || 'Неизвестная ошибка'));
+      }
+    } catch (error) {
+      alert('Ошибка при создании сегмента: ' + error.message);
+    }
+  }
+</script>

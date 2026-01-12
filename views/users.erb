@@ -1,0 +1,125 @@
+<div class="px-4 py-6 sm:px-0">
+  <div class="sm:flex sm:items-center">
+    <div class="sm:flex-auto">
+      <h1 class="text-3xl font-bold text-gray-900">Пользователи</h1>
+      <p class="mt-2 text-sm text-gray-700">Список пользователей и их сегментов</p>
+    </div>
+  </div>
+  
+  <div class="mt-8 flex flex-col">
+    <div class="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
+      <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
+        <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+          <table class="min-w-full divide-y divide-gray-300">
+            <thead class="bg-gray-50">
+              <tr>
+                <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">ID</th>
+                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Сегменты</th>
+                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Создан</th>
+                <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
+                  <span class="sr-only">Действия</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 bg-white">
+              <% @users.each do |user| %>
+                <tr>
+                  <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
+                    #<%= user.id %>
+                  </td>
+                  <td class="px-3 py-4 text-sm text-gray-500">
+                    <div class="flex flex-wrap gap-2">
+                      <% user.segments.each do |segment| %>
+                        <span class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
+                          <%= segment.slug %>
+                        </span>
+                      <% end %>
+                      <% if user.segments.empty? %>
+                        <span class="text-gray-400 italic">Нет сегментов</span>
+                      <% end %>
+                    </div>
+                  </td>
+                  <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                    <%= user.created_at.strftime('%d.%m.%Y %H:%M') %>
+                  </td>
+                  <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                    <button onclick="viewUserSegments(<%= user.id %>)" class="text-indigo-600 hover:text-indigo-900">
+                      Детали
+                    </button>
+                  </td>
+                </tr>
+              <% end %>
+              
+              <% if @users.empty? %>
+                <tr>
+                  <td colspan="4" class="py-8 text-center text-sm text-gray-500">
+                    Пользователи не найдены
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal for user details -->
+<div id="userModal" class="hidden fixed z-10 inset-0 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+  <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onclick="closeModal()"></div>
+    <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+    <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+      <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+          Сегменты пользователя #<span id="modalUserId"></span>
+        </h3>
+        <div class="mt-4" id="modalContent">
+          <!-- Content will be loaded here -->
+        </div>
+      </div>
+      <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+        <button type="button" onclick="closeModal()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+          Закрыть
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  async function viewUserSegments(userId) {
+    try {
+      const response = await fetch(`/api/users/${userId}/segments`);
+      const data = await response.json();
+      
+      document.getElementById('modalUserId').textContent = userId;
+      
+      let content = '<div class="space-y-2">';
+      if (data.segments && data.segments.length > 0) {
+        data.segments.forEach(segment => {
+          content += `
+            <div class="border border-gray-200 rounded-lg p-3">
+              <div class="font-medium text-gray-900">${segment.slug}</div>
+              <div class="text-sm text-gray-600">${segment.name}</div>
+              ${segment.description ? `<div class="text-xs text-gray-500 mt-1">${segment.description}</div>` : ''}
+            </div>
+          `;
+        });
+      } else {
+        content += '<p class="text-gray-500">У пользователя нет сегментов</p>';
+      }
+      content += '</div>';
+      
+      document.getElementById('modalContent').innerHTML = content;
+      document.getElementById('userModal').classList.remove('hidden');
+    } catch (error) {
+      alert('Ошибка при загрузке данных: ' + error.message);
+    }
+  }
+  
+  function closeModal() {
+    document.getElementById('userModal').classList.add('hidden');
+  }
+</script>

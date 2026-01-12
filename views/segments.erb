@@ -1,0 +1,205 @@
+<div class="px-4 py-6 sm:px-0">
+  <div class="sm:flex sm:items-center">
+    <div class="sm:flex-auto">
+      <h1 class="text-3xl font-bold text-gray-900">Сегменты</h1>
+      <p class="mt-2 text-sm text-gray-700">Список всех сегментов в системе</p>
+    </div>
+    <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
+      <a href="/segments/new" class="inline-flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:w-auto">
+        Добавить сегмент
+      </a>
+    </div>
+  </div>
+  
+  <div class="mt-8 flex flex-col">
+    <div class="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
+      <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
+        <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+          <table class="min-w-full divide-y divide-gray-300">
+            <thead class="bg-gray-50">
+              <tr>
+                <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Slug</th>
+                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Название</th>
+                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Описание</th>
+                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Пользователей</th>
+                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Создан</th>
+                <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
+                  <span class="sr-only">Действия</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 bg-white">
+              <% @segments.each do |segment| %>
+                <tr>
+                  <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
+                    <%= segment.slug %>
+                  </td>
+                  <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500"><%= segment.name %></td>
+                  <td class="px-3 py-4 text-sm text-gray-500"><%= segment.description || '-' %></td>
+                  <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                    <span class="inline-flex items-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-medium text-indigo-800">
+                      <%= segment.users.count %>
+                    </span>
+                  </td>
+                  <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                    <%= segment.created_at.strftime('%d.%m.%Y') %>
+                  </td>
+                  <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                    <button onclick="editSegment('<%= segment.slug %>', '<%= segment.name %>', '<%= segment.description %>', <%= segment.users.count %>)" class="text-indigo-600 hover:text-indigo-900 mr-4">Редактировать</button>
+                    <button onclick="deleteSegment('<%= segment.slug %>')" class="text-red-600 hover:text-red-900">Удалить</button>
+                  </td>
+                </tr>
+              <% end %>
+              
+              <% if @segments.empty? %>
+                <tr>
+                  <td colspan="6" class="py-8 text-center text-sm text-gray-500">
+                    Сегменты не найдены. <a href="/segments/new" class="text-indigo-600 hover:text-indigo-900">Создать первый сегмент</a>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div id="editModal" class="hidden fixed z-10 inset-0 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+  <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onclick="closeEditModal()"></div>
+    <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+    <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+      <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+          Редактирование сегмента <span id="editSlugTitle"></span>
+        </h3>
+        <div class="mt-4">
+          <input type="hidden" id="editSlug">
+          <div class="mb-4">
+            <label for="editName" class="block text-sm font-medium text-gray-700">Название</label>
+            <input type="text" id="editName" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md px-3 py-2 border">
+          </div>
+          <div class="mb-4">
+            <label for="editDescription" class="block text-sm font-medium text-gray-700">Описание</label>
+            <textarea id="editDescription" rows="3" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 mt-1 block w-full sm:text-sm border border-gray-300 rounded-md px-3 py-2"></textarea>
+          </div>
+          <div>
+            <label for="editAutoAssignPercent" class="block text-sm font-medium text-gray-700">Целевой процент пользователей</label>
+            <div class="flex items-center gap-2">
+              <input type="number" id="editAutoAssignPercent" min="0" max="100" placeholder="Текущий" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md px-3 py-2 border">
+              <span class="text-sm text-gray-500 whitespace-nowrap">Текущий: <span id="currentPercent" class="font-medium">0</span>%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+        <button type="button" onclick="saveSegment()" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm">
+          Сохранить
+        </button>
+        <button type="button" onclick="closeEditModal()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+          Отмена
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  async function editSegment(slug, name, description, currentUserCount) {
+    document.getElementById('editSlug').value = slug;
+    document.getElementById('editSlugTitle').textContent = slug;
+    document.getElementById('editName').value = name;
+    document.getElementById('editDescription').value = description || '';
+    document.getElementById('editAutoAssignPercent').value = '';
+    
+    // Get total user count and calculate percentage
+    try {
+      const response = await fetch('/api/users/stats');
+      let totalUsers = 100; // fallback
+      if (response.ok) {
+        const data = await response.json();
+        totalUsers = data.total_users || 100;
+      }
+      
+      const currentPercent = totalUsers > 0 ? Math.round((currentUserCount / totalUsers) * 100) : 0;
+      document.getElementById('currentPercent').textContent = currentPercent;
+    } catch (e) {
+      // Fallback calculation
+      const currentPercent = Math.round((currentUserCount / 100) * 100);
+      document.getElementById('currentPercent').textContent = currentPercent;
+    }
+    
+    document.getElementById('editModal').classList.remove('hidden');
+  }
+
+  function closeEditModal() {
+    document.getElementById('editModal').classList.add('hidden');
+  }
+
+  async function saveSegment() {
+    const slug = document.getElementById('editSlug').value;
+    const name = document.getElementById('editName').value;
+    const description = document.getElementById('editDescription').value;
+    const autoAssignPercent = document.getElementById('editAutoAssignPercent').value;
+
+    const payload = { name, description };
+    if (autoAssignPercent && autoAssignPercent !== '') {
+      payload.auto_assign_percent = parseInt(autoAssignPercent);
+    }
+
+    try {
+      const response = await fetch(`/api/segments/${slug}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert('Сегмент успешно обновлён!');
+        closeEditModal();
+        window.location.reload();
+      } else {
+        alert('Ошибка: ' + (data.error || 'Неизвестная ошибка'));
+      }
+    } catch (error) {
+      alert('Ошибка при обновлении сегмента: ' + error.message);
+    }
+  }
+
+  async function deleteSegment(slug) {
+    if (!confirm(`Вы уверены, что хотите удалить сегмент ${slug}?`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/segments/${slug}`, {
+        method: 'DELETE'
+      });
+
+      if (response.ok || response.status === 204) {
+        alert('Сегмент успешно удалён!');
+        window.location.reload();
+      } else {
+        // Try to parse JSON only if there's content
+        let errorMessage = 'Неизвестная ошибка';
+        try {
+          const data = await response.json();
+          errorMessage = data.error || errorMessage;
+        } catch (e) {
+          // If JSON parsing fails, use status text
+          errorMessage = response.statusText || errorMessage;
+        }
+        alert('Ошибка: ' + errorMessage);
+      }
+    } catch (error) {
+      alert('Ошибка при удалении сегмента: ' + error.message);
+    }
+  }
+</script>
